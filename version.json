@@ -1,0 +1,14 @@
+{
+  "version": "v1.0.00",
+  "build": "20261116.1",
+  "releaseDate": "2026-11-16",
+  "environment": "production",
+  "cacheName": "fueltrack-cache-v1.0.00",
+  "features": [
+    "Thermal Volume Compensation 15°C Engine (#307)",
+    "Compartment Cistern Stock & Seal Witness Audit (#115/#120)",
+    "Flowmeter Mechanical Counter Photo Gate (#141)",
+    "Commodity Liter Ledger & ICL/IDC Fiscal Breakdown (#161/#107)",
+    "Cryptographic SHA-256 Fuel Delivery ePOD (#159/#245)"
+  ]
+}

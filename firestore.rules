@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isLogisticsStaff() {
+      return isAuthenticated() && (
+        request.auth.token.role in ['ADMIN', 'DESPACHADOR', 'CHOFER_CISTERNA', 'AUDITOR']
+      );
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'ADMIN';
+    }
+
+    // Camiones Cisterna y Compartimentos
+    match /tankTrucks/{truckId} {
+      allow read: if isAuthenticated();
+      allow create: if isLogisticsStaff();
+      allow update: if isLogisticsStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Remitos y Descargas de Combustible (ePOD)
+    match /fuelDeliveries/{deliveryId} {
+      allow read: if isAuthenticated();
+      allow create: if isLogisticsStaff();
+      allow update: if isLogisticsStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Cuentas Corrientes en Litros
+    match /literLedgers/{ledgerId} {
+      allow read: if isAuthenticated();
+      allow create: if isLogisticsStaff();
+      allow update: if isLogisticsStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Auditoría de Mermas y Precintos
+    match /sealAudits/{auditId} {
+      allow read: if isAuthenticated();
+      allow create: if isLogisticsStaff();
+      allow update: if isLogisticsStaff();
+      allow delete: if isAdmin();
+    }
+
+    // Bloqueo total por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
