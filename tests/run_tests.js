@@ -14,6 +14,7 @@ import { FuelTrackCache } from '../src/services/fuelTrackCache.service.js';
 import { computeSHA256, sealFuelDeliveryEPOD } from '../src/utils/cryptoSeal.js';
 import { formatCurrency, formatLiters, formatDateTime, formatDate } from '../src/utils/formatters.js';
 import { Sanitizer } from '../src/utils/sanitizer.js';
+import { state, seedDemoData, purgeDemoData } from '../src/app.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -276,9 +277,32 @@ async function runAllTests() {
   assert(headerKeys.includes('content-security-policy'), 'firebase.json define Content-Security-Policy (CSP)', 'SEC');
   assert(headerKeys.includes('x-frame-options') && headerKeys.includes('x-content-type-options'), 'firebase.json define X-Frame-Options y X-Content-Type-Options', 'SEC');
 
-  const swEntry = allHeaders.find((h) => h.source === 'sw.js');
+  const swEntry = allHeaders.find((h) => h.source === '/sw.js' || h.source === 'sw.js');
   const swCacheControl = swEntry?.headers?.find((h) => h.key.toLowerCase() === 'cache-control')?.value || '';
   assert(swCacheControl.includes('no-cache'), 'firebase.json define Cache-Control no-cache para el Service Worker', 'SEC');
+
+  const cspHeader = globalHeaderObj.find((h) => h.key.toLowerCase() === 'content-security-policy')?.value || '';
+  assert(!cspHeader.includes("'unsafe-inline'") && !cspHeader.includes('cdn.tailwindcss.com'), 'CSP en firebase.json elimina unsafe-inline y CDNs externos', 'SEC');
+
+  const manifestPath = path.join(projectRoot, 'manifest.json');
+  assert(fs.existsSync(manifestPath), 'Archivo manifest.json existe en la raíz', 'SEC');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  assert(Boolean(manifest.name && manifest.start_url && manifest.display && Array.isArray(manifest.icons) && manifest.icons.length > 0), 'manifest.json contiene campos PWA válidos (name, start_url, display, icons)', 'SEC');
+
+  const stylesCssPath = path.join(projectRoot, 'styles.css');
+  assert(fs.existsSync(stylesCssPath), 'CSS compilado local styles.css existe para soporte Offline-First', 'SEC');
+
+  const indexHtml = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf-8');
+  assert(!indexHtml.includes('cdn.tailwindcss.com') && indexHtml.includes('./styles.css') && indexHtml.includes('./manifest.json'), 'index.html carga styles.css local y manifest.json sin CDN externo', 'SEC');
+
+  // 3. Anti-siembra fantasma tras purga demo
+  FuelTrackCache.clear();
+  seedDemoData();
+  assert(state.trucks.some((t) => t.isDemo), 'seedDemoData marca registros iniciales con isDemo: true', 'SEC');
+  purgeDemoData();
+  seedDemoData();
+  assert(state.trucks.length === 0 && state.accounts.length === 0, 'seedDemoData respeta fueltrack_demo_purged y evita resiembra fantasma', 'SEC');
+  FuelTrackCache.clear();
 
   // ==========================================
   // CAPA 5: FLUJO E2E Y CASO DE USO COMPLETO (6 Tests)

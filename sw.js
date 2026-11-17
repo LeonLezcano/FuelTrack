@@ -1,14 +1,18 @@
 /**
- * FuelTrack — Service Worker
- * Soporte Offline-First para Camiones Cisterna y Despachos en Zonas Rurales y Mineras sin señal.
+ * FuelTrack - Service Worker
+ * Soporte Offline-First para Camiones Cisterna y Despachos en Zonas Rurales y Mineras sin senal.
  */
 
-const CACHE_NAME = 'fueltrack-cache-v1.0.00';
+const CACHE_NAME = 'fueltrack-cache-v1.0.01';
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './styles.css',
+  './manifest.json',
+  './favicon.svg',
   './version.json',
   './src/app.js',
+  './src/sw-register.js',
   './src/core/thermalFuelCompensatorEngine.js',
   './src/core/compartmentSealAuditorEngine.js',
   './src/services/fuelLiterLedgerService.js',
@@ -41,16 +45,45 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  const isHtmlOrVersion =
+    event.request.mode === 'navigate' ||
+    event.request.headers.get('accept')?.includes('text/html') ||
+    url.pathname.endsWith('/version.json') ||
+    url.pathname === '/version.json';
+
+  if (isHtmlOrVersion) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).catch(() => {
-          if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('./index.html');
-          }
-        })
-      );
+      if (cached) {
+        return cached;
+      }
+      return fetch(event.request).then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+        }
+        return response;
+      });
     })
   );
 });

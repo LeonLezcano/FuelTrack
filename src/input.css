@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #0f172a;
+    background-color: #f1f5f9;
+  }
+
+  ::selection {
+    background-color: #f59e0b;
+    color: #0f172a;
+  }
+
+  :focus-visible {
+    outline: 3px solid #f59e0b;
+    outline-offset: 2px;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.fuel-progress {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #e2e8f0;
+  border: none;
+}
+
+.fuel-progress::-webkit-progress-bar {
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.fuel-progress::-webkit-progress-value {
+  background-color: #d97706;
+  border-radius: 9999px;
+}
+
+.fuel-progress::-moz-progress-bar {
+  background-color: #d97706;
+  border-radius: 9999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  article,
+  section {
+    box-shadow: none !important;
+    border-color: #94a3b8 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    break-inside: avoid;
+  }
+}

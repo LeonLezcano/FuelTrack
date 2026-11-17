@@ -39,19 +39,24 @@ export class Sanitizer {
 
     const allowedTags = new Set([
       'DIV', 'SPAN', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-      'UL', 'OL', 'LI', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD',
-      'STRONG', 'B', 'EM', 'I', 'U', 'SMALL', 'BADGE', 'BUTTON', 'A', 'IMG',
-      'SECTION', 'ARTICLE', 'HEADER', 'FOOTER', 'NAV', 'MAIN',
+      'UL', 'OL', 'LI', 'DL', 'DT', 'DD', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD',
+      'STRONG', 'B', 'EM', 'I', 'U', 'SMALL', 'BADGE', 'BUTTON', 'A', 'IMG', 'PROGRESS',
+      'SECTION', 'ARTICLE', 'HEADER', 'FOOTER', 'NAV', 'MAIN', 'FIELDSET', 'LEGEND',
       'LABEL', 'INPUT', 'SELECT', 'OPTION', 'TEXTAREA', 'FORM',
       'SVG', 'PATH', 'CIRCLE', 'RECT', 'LINE', 'POLYLINE', 'POLYGON', 'G'
     ]);
 
     const allowedAttrs = new Set([
-      'class', 'id', 'name', 'type', 'value', 'placeholder', 'data-id',
-      'data-action', 'data-tab', 'data-qr', 'data-code', 'data-truck', 'data-item',
-      'disabled', 'checked', 'selected', 'rows', 'cols', 'href', 'title', 'aria-label',
-      'role', 'd', 'fill', 'stroke', 'stroke-width', 'viewBox', 'xmlns', 'src', 'alt',
-      'target', 'rel', 'step', 'max', 'min', 'style'
+      'class', 'id', 'name', 'type', 'value', 'placeholder', 'for', 'tabindex',
+      'accept', 'required', 'readonly', 'autocomplete',
+      'disabled', 'checked', 'selected', 'rows', 'cols', 'href', 'title',
+      'role', 'd', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+      'viewbox', 'xmlns', 'width', 'height', 'cx', 'cy', 'r', 'x1', 'y1', 'x2', 'y2', 'rx', 'ry', 'points',
+      'src', 'alt', 'target', 'rel', 'step', 'max', 'min', 'style'
+    ]);
+
+    const svgTags = new Set([
+      'SVG', 'PATH', 'CIRCLE', 'RECT', 'LINE', 'POLYLINE', 'POLYGON', 'G'
     ]);
 
     function cleanNode(node) {
@@ -68,7 +73,9 @@ export class Sanitizer {
         return null;
       }
 
-      const cleanEl = document.createElement(tagName.toLowerCase());
+      const cleanEl = svgTags.has(tagName)
+        ? document.createElementNS('http://www.w3.org/2000/svg', tagName.toLowerCase())
+        : document.createElement(tagName.toLowerCase());
 
       for (let i = 0; i < node.attributes.length; i++) {
         const attr = node.attributes[i];
@@ -77,8 +84,9 @@ export class Sanitizer {
         if (attrName.startsWith('on') || attrName === 'formaction') continue;
         if ((attrName === 'href' || attrName === 'src') && attr.value.trim().toLowerCase().startsWith('javascript:')) continue;
 
-        if (allowedAttrs.has(attrName) || attrName.startsWith('data-')) {
-          cleanEl.setAttribute(attrName, attr.value);
+        if (allowedAttrs.has(attrName) || attrName.startsWith('data-') || attrName.startsWith('aria-')) {
+          const targetAttrName = attrName === 'viewbox' ? 'viewBox' : attrName;
+          cleanEl.setAttribute(targetAttrName, attr.value);
         }
       }
 

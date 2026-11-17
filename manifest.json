@@ -1,0 +1,20 @@
+{
+  "name": "FuelTrack - Distribución de Combustibles a Granel",
+  "short_name": "FuelTrack",
+  "description": "Control de cisternas compartimentadas, precintos, remitos ePOD y compensación térmica a 15°C Offline-First.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "es-AR",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
